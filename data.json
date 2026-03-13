@@ -1,0 +1,218 @@
+[
+  {
+    "brand": "Ford",
+    "model": "F150",
+    "yearStart": 2011,
+    "yearEnd": 2023,
+    "partName": "刹车片",
+    "partNumber": "BP-F150-001",
+    "notes": "前轮陶瓷刹车片"
+  },
+  {
+    "brand": "Ford",
+    "model": "F150",
+    "yearStart": 2015,
+    "yearEnd": 2023,
+    "partName": "空气滤芯",
+    "partNumber": "AF-F150-003",
+    "notes": "原厂规格"
+  },
+  {
+    "brand": "Ford",
+    "model": "F150",
+    "yearStart": 2011,
+    "yearEnd": 2020,
+    "partName": "机油滤芯",
+    "partNumber": "OF-F150-002",
+    "notes": ""
+  },
+  {
+    "brand": "Ford",
+    "model": "Explorer",
+    "yearStart": 2016,
+    "yearEnd": 2023,
+    "partName": "刹车盘",
+    "partNumber": "BD-EXP-001",
+    "notes": "前后盘套装"
+  },
+  {
+    "brand": "Ford",
+    "model": "Explorer",
+    "yearStart": 2016,
+    "yearEnd": 2023,
+    "partName": "火花塞",
+    "partNumber": "SP-EXP-001",
+    "notes": "NGK铱金火花塞"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry",
+    "yearStart": 2012,
+    "yearEnd": 2021,
+    "partName": "刹车片",
+    "partNumber": "BP-CAM-001",
+    "notes": ""
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry",
+    "yearStart": 2018,
+    "yearEnd": 2023,
+    "partName": "空气滤芯",
+    "partNumber": "AF-CAM-002",
+    "notes": "混动版专用"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry",
+    "yearStart": 2012,
+    "yearEnd": 2017,
+    "partName": "雨刷片",
+    "partNumber": "WB-CAM-001",
+    "notes": "22寸"
+  },
+  {
+    "brand": "Toyota",
+    "model": "RAV4",
+    "yearStart": 2013,
+    "yearEnd": 2023,
+    "partName": "机油滤芯",
+    "partNumber": "OF-RAV-001",
+    "notes": ""
+  },
+  {
+    "brand": "Toyota",
+    "model": "RAV4",
+    "yearStart": 2019,
+    "yearEnd": 2023,
+    "partName": "脚垫",
+    "partNumber": "FM-RAV-001",
+    "notes": "原厂脚垫"
+  },
+  {
+    "brand": "Honda",
+    "model": "Civic",
+    "yearStart": 2016,
+    "yearEnd": 2021,
+    "partName": "刹车片",
+    "partNumber": "BP-CIV-001",
+    "notes": ""
+  },
+  {
+    "brand": "Honda",
+    "model": "Civic",
+    "yearStart": 2016,
+    "yearEnd": 2021,
+    "partName": "空气滤芯",
+    "partNumber": "AF-CIV-001",
+    "notes": ""
+  },
+  {
+    "brand": "Honda",
+    "model": "Accord",
+    "yearStart": 2018,
+    "yearEnd": 2023,
+    "partName": "雨刷片",
+    "partNumber": "WB-ACC-001",
+    "notes": ""
+  },
+  {
+    "brand": "BMW",
+    "model": "3系",
+    "yearStart": 2013,
+    "yearEnd": 2023,
+    "partName": "刹车片",
+    "partNumber": "BP-BMW-3X",
+    "notes": "高性能陶瓷片"
+  },
+  {
+    "brand": "BMW",
+    "model": "3系",
+    "yearStart": 2015,
+    "yearEnd": 2023,
+    "partName": "空气滤芯",
+    "partNumber": "AF-BMW-3X",
+    "notes": "M Performance"
+  },
+  {
+    "brand": "BMW",
+    "model": "5系",
+    "yearStart": 2017,
+    "yearEnd": 2023,
+    "partName": "火花塞",
+    "partNumber": "SP-BMW-5X",
+    "notes": ""
+  },
+  {
+    "brand": "Mercedes",
+    "model": "C级",
+    "yearStart": 2015,
+    "yearEnd": 2023,
+    "partName": "刹车片",
+    "partNumber": "BP-MB-C",
+    "notes": "原厂认证"
+  },
+  {
+    "brand": "Mercedes",
+    "model": "C级",
+    "yearStart": 2014,
+    "yearEnd": 2020,
+    "partName": "机油滤芯",
+    "partNumber": "OF-MB-C",
+    "notes": ""
+  },
+  {
+    "brand": "Audi",
+    "model": "A4",
+    "yearStart": 2017,
+    "yearEnd": 2023,
+    "partName": "空气滤芯",
+    "partNumber": "AF-AUD-A4",
+    "notes": ""
+  },
+  {
+    "brand": "Audi",
+    "model": "A4",
+    "yearStart": 2017,
+    "yearEnd": 2023,
+    "partName": "雨刷片",
+    "partNumber": "WB-AUD-A4",
+    "notes": ""
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Silverado",
+    "yearStart": 2014,
+    "yearEnd": 2023,
+    "partName": "刹车片",
+    "partNumber": "BP-SILV-001",
+    "notes": ""
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Silverado",
+    "yearStart": 2014,
+    "yearEnd": 2023,
+    "partName": "空气滤芯",
+    "partNumber": "AF-SILV-001",
+    "notes": ""
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima",
+    "yearStart": 2013,
+    "yearEnd": 2023,
+    "partName": "刹车片",
+    "partNumber": "BP-ALT-001",
+    "notes": ""
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima",
+    "yearStart": 2019,
+    "yearEnd": 2023,
+    "partName": "脚垫",
+    "partNumber": "FM-ALT-001",
+    "notes": ""
+  }
+]

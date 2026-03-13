@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车配件查询系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .brand-select, .model-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">汽车配件查询系统</h1>
+            <p class="text-gray-600">根据品牌、车型、年份快速查询适用的汽车配件</p>
+        </header>
+
+        <!-- Query Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">配件查询</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">品牌</label>
+                    <select id="brandSelect" class="brand-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">请选择品牌</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">车型</label>
+                    <select id="modelSelect" class="model-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">请先选择品牌</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">年份</label>
+                    <input type="number" id="yearInput" placeholder="如: 2017" min="1900" max="2030"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-end">
+                    <button id="queryBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+                        查询配件
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">查询结果</h2>
+                <span id="resultCount" class="text-sm text-gray-500">共 0 条记录</span>
+            </div>
+            <div id="resultsContainer" class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-medium text-gray-700">品牌</th>
+                            <th class="px-4 py-2 text-left font-medium text-gray-700">车型</th>
+                            <th class="px-4 py-2 text-left font-medium text-gray-700">适用年份</th>
+                            <th class="px-4 py-2 text-left font-medium text-gray-700">配件名称</th>
+                            <th class="px-4 py-2 text-left font-medium text-gray-700">配件编号</th>
+                            <th class="px-4 py-2 text-left font-medium text-gray-700">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">请选择条件并查询配件</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Data Management Section -->
+        <section class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">数据管理</h2>
+                <div class="flex gap-2">
+                    <button id="addPartBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+                        + 添加配件
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-blue-600" id="totalParts">0</div>
+                    <div class="text-sm text-gray-600">配件总数</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-green-600" id="totalBrands">0</div>
+                    <div class="text-sm text-gray-600">品牌数量</div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="totalModels">0</div>
+                    <div class="text-sm text-gray-600">车型数量</div>
+                </div>
+                <div class="bg-orange-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-orange-600" id="lastUpdate">-</div>
+                    <div class="text-sm text-gray-600">最后更新</div>
+                </div>
+            </div>
+
+            <!-- Import/Export -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-600">导入 Excel/CSV 文件</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                    <button onclick="document.getElementById('fileInput').click()" class="mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors">
+                        选择文件
+                    </button>
+                    <p class="mt-2 text-xs text-gray-500">支持 .xlsx, .xls, .csv 格式</p>
+                </div>
+                <div class="border rounded-lg p-6">
+                    <h3 class="font-medium text-gray-700 mb-3">导出数据</h3>
+                    <div class="flex gap-2">
+                        <button id="exportJsonBtn" class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-2 px-4 rounded-md transition-colors">
+                            导出 JSON
+                        </button>
+                        <button id="exportCsvBtn" class="flex-1 bg-green-100 hover:bg-green-200 text-green-700 font-medium py-2 px-4 rounded-md transition-colors">
+                            导出 CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete All -->
+            <div class="border-t pt-4 flex justify-between items-center">
+                <button id="clearAllBtn" class="text-red-600 hover:text-red-700 font-medium">
+                    清空所有数据
+                </button>
+                <span class="text-xs text-gray-500">数据保存在浏览器本地存储中</span>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="partModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-lg font-semibold" id="modalTitle">添加配件</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="partForm" class="p-4 space-y-4">
+                <input type="hidden" id="partId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">品牌 *</label>
+                    <input type="text" id="partBrand" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">车型 *</label>
+                    <input type="text" id="partModel" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">起始年份 *</label>
+                        <input type="number" id="partYearStart" required min="1900" max="2030" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">结束年份 *</label>
+                        <input type="number" id="partYearEnd" required min="1900" max="2030" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">配件名称 *</label>
+                    <input type="text" id="partName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">配件编号</label>
+                    <input type="text" id="partNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                    <textarea id="partNotes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+                        保存
+                    </button>
+                    <button type="button" id="cancelBtn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors">
+                        取消
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
+            <h3 class="text-lg font-semibold mb-2">确认删除</h3>
+            <p class="text-gray-600 mb-4">确定要清空所有数据吗？此操作不可恢复。</p>
+            <div class="flex gap-2">
+                <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+                    确认删除
+                </button>
+                <button id="cancelDeleteBtn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg hidden">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // ==================== Data Storage Module ====================
+        const STORAGE_KEY = 'carPartsData';
+        const DEFAULT_DATA_URL = 'data.json'; // 外部数据文件
+
+        function loadData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            updateStats();
+        }
+
+        // 从外部 JSON 文件加载数据
+        async function loadExternalData() {
+            try {
+                const response = await fetch(DEFAULT_DATA_URL);
+                if (response.ok) {
+                    const externalData = await response.json();
+                    // 只有当本地没有数据时才使用外部数据
+                    const localData = loadData();
+                    if (localData.length === 0 && externalData.length > 0) {
+                        saveData(externalData);
+                        localStorage.setItem('carPartsLastUpdate', new Date().toISOString());
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.log('未找到外部数据文件或加载失败');
+            }
+            return false;
+        }
+
+        // ==================== Stats Update ====================
+        function updateStats() {
+            const parts = loadData();
+            const brands = [...new Set(parts.map(p => p.brand))].filter(Boolean);
+            const models = [...new Set(parts.map(p => p.model))].filter(Boolean);
+
+            document.getElementById('totalParts').textContent = parts.length;
+            document.getElementById('totalBrands').textContent = brands.length;
+            document.getElementById('totalModels').textContent = models.length;
+
+            // Get last update time
+            const lastUpdate = localStorage.getItem('carPartsLastUpdate');
+            document.getElementById('lastUpdate').textContent = lastUpdate ? new Date(lastUpdate).toLocaleDateString('zh-CN') : '-';
+        }
+
+        // ==================== Dropdown Population ====================
+        function updateDropdowns() {
+            const parts = loadData();
+            const brands = [...new Set(parts.map(p => p.brand))].filter(Boolean).sort();
+
+            const brandSelect = document.getElementById('brandSelect');
+            const currentBrand = brandSelect.value;
+
+            brandSelect.innerHTML = '<option value="">请选择品牌</option>';
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                brandSelect.appendChild(option);
+            });
+
+            // If there was a selected brand, restore it and update models
+            if (currentBrand && brands.includes(currentBrand)) {
+                brandSelect.value = currentBrand;
+                updateModelDropdown(currentBrand);
+            }
+        }
+
+        function updateModelDropdown(brand) {
+            if (!brand) {
+                document.getElementById('modelSelect').innerHTML = '<option value="">请先选择品牌</option>';
+                return;
+            }
+
+            const parts = loadData();
+            const models = [...new Set(parts.filter(p => p.brand === brand).map(p => p.model))].filter(Boolean).sort();
+
+            const modelSelect = document.getElementById('modelSelect');
+            modelSelect.innerHTML = '<option value="">请选择车型</option>';
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+        }
+
+        // ==================== Query Module ====================
+        function queryParts() {
+            const brand = document.getElementById('brandSelect').value;
+            const model = document.getElementById('modelSelect').value;
+            const year = parseInt(document.getElementById('yearInput').value);
+
+            const parts = loadData();
+
+            let results = parts;
+
+            // Filter by brand
+            if (brand) {
+                results = results.filter(p => p.brand === brand);
+            }
+
+            // Filter by model
+            if (model) {
+                results = results.filter(p => p.model === model);
+            }
+
+            // Filter by year range
+            if (year && !isNaN(year)) {
+                results = results.filter(p => {
+                    const yearStart = parseInt(p.yearStart);
+                    const yearEnd = parseInt(p.yearEnd);
+                    return year >= yearStart && year <= yearEnd;
+                });
+            }
+
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            const tbody = document.getElementById('resultsBody');
+            const countSpan = document.getElementById('resultCount');
+
+            countSpan.textContent = `共 ${results.length} 条记录`;
+
+            if (results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">没有找到匹配的配件</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = results.map((part, index) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">${part.brand || '-'}</td>
+                    <td class="px-4 py-2">${part.model || '-'}</td>
+                    <td class="px-4 py-2">${part.yearStart} - ${part.yearEnd}</td>
+                    <td class="px-4 py-2 font-medium">${part.partName || '-'}</td>
+                    <td class="px-4 py-2">${part.partNumber || '-'}</td>
+                    <td class="px-4 py-2 text-gray-500">${part.notes || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ==================== Import Module ====================
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileName = file.name.toLowerCase();
+
+            if (fileName.endsWith('.csv')) {
+                // Parse CSV
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const text = e.target.result;
+                        const lines = text.trim().split('\n');
+                        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, ''));
+
+                        const jsonData = lines.slice(1).map(line => {
+                            const values = line.split(',');
+                            const row = {};
+                            headers.forEach((header, i) => {
+                                row[header] = values[i] ? values[i].trim() : '';
+                            });
+                            return row;
+                        });
+
+                        processImportedData(jsonData);
+                        event.target.value = '';
+                    } catch (error) {
+                        console.error('CSV Import error:', error);
+                        showToast('导入失败：请检查文件格式是否正确', 'error');
+                    }
+                };
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                // Parse Excel
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                        processImportedData(jsonData);
+                        event.target.value = '';
+                    } catch (error) {
+                        console.error('Excel Import error:', error);
+                        showToast('导入失败：请检查文件格式是否正确', 'error');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function processImportedData(jsonData) {
+            // Normalize column names (handle both camelCase and lowercase)
+            const normalizedData = jsonData.map(row => {
+                const newRow = {};
+                Object.keys(row).forEach(key => {
+                    const normalizedKey = key.toLowerCase().trim().replace(/\s+/g, '');
+                    // Map various column name formats
+                    if (normalizedKey === 'brand') newRow.brand = row[key];
+                    if (normalizedKey === 'model') newRow.model = row[key];
+                    if (normalizedKey === 'yearstart' || normalizedKey === 'year_start') newRow.yearStart = row[key];
+                    if (normalizedKey === 'yearend' || normalizedKey === 'year_end') newRow.yearEnd = row[key];
+                    if (normalizedKey === 'partname' || normalizedKey === 'part_name') newRow.partName = row[key];
+                    if (normalizedKey === 'partnumber' || normalizedKey === 'part_number') newRow.partNumber = row[key];
+                    if (normalizedKey === 'notes') newRow.notes = row[key];
+                });
+                return newRow;
+            }).filter(row => row.brand && row.model && row.yearStart && row.yearEnd && row.partName);
+
+            if (normalizedData.length === 0) {
+                showToast('导入失败：请确保数据包含必填字段（brand, model, yearStart, yearEnd, partName）', 'error');
+                return;
+            }
+
+            // Validate and convert year fields
+            const validData = normalizedData.map(row => ({
+                brand: String(row.brand).trim(),
+                model: String(row.model).trim(),
+                yearStart: parseInt(row.yearStart) || 2000,
+                yearEnd: parseInt(row.yearEnd) || 2030,
+                partName: String(row.partName).trim(),
+                partNumber: row.partNumber ? String(row.partNumber).trim() : '',
+                notes: row.notes ? String(row.notes).trim() : ''
+            }));
+
+            // Append to existing data
+            const existingData = loadData();
+            const newData = [...existingData, ...validData];
+            saveData(newData);
+
+            // Save timestamp
+            localStorage.setItem('carPartsLastUpdate', new Date().toISOString());
+
+            updateDropdowns();
+            updateStats();
+            showToast(`成功导入 ${validData.length} 条配件数据`);
+        }
+
+        // ==================== Export Module ====================
+        function exportToJson() {
+            const parts = loadData();
+            if (parts.length === 0) {
+                showToast('没有数据可导出', 'error');
+                return;
+            }
+
+            const jsonStr = JSON.stringify(parts, null, 2);
+            downloadFile(jsonStr, 'car_parts.json', 'application/json');
+            showToast('JSON 导出成功');
+        }
+
+        function exportToCsv() {
+            const parts = loadData();
+            if (parts.length === 0) {
+                showToast('没有数据可导出', 'error');
+                return;
+            }
+
+            const headers = ['brand', 'model', 'yearStart', 'yearEnd', 'partName', 'partNumber', 'notes'];
+            const csvRows = [headers.join(',')];
+
+            parts.forEach(part => {
+                const row = headers.map(header => {
+                    const value = part[header] || '';
+                    // Escape CSV values
+                    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value;
+                });
+                csvRows.push(row.join(','));
+            });
+
+            const csvStr = csvRows.join('\n');
+            downloadFile(csvStr, 'car_parts.csv', 'text/csv;charset=utf-8;');
+            showToast('CSV 导出成功');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== Add/Edit Part ====================
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '添加配件';
+            document.getElementById('partForm').reset();
+            document.getElementById('partId').value = '';
+            document.getElementById('partModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('partModal').classList.add('hidden');
+        }
+
+        function savePart(event) {
+            event.preventDefault();
+
+            const partId = document.getElementById('partId').value;
+            const partData = {
+                brand: document.getElementById('partBrand').value.trim(),
+                model: document.getElementById('partModel').value.trim(),
+                yearStart: parseInt(document.getElementById('partYearStart').value),
+                yearEnd: parseInt(document.getElementById('partYearEnd').value),
+                partName: document.getElementById('partName').value.trim(),
+                partNumber: document.getElementById('partNumber').value.trim(),
+                notes: document.getElementById('partNotes').value.trim()
+            };
+
+            const parts = loadData();
+
+            if (partId) {
+                // Edit existing
+                const index = parts.findIndex(p => p.id === partId);
+                if (index !== -1) {
+                    parts[index] = { ...parts[index], ...partData };
+                }
+            } else {
+                // Add new
+                partData.id = Date.now().toString();
+                parts.push(partData);
+            }
+
+            saveData(parts);
+            localStorage.setItem('carPartsLastUpdate', new Date().toISOString());
+            updateDropdowns();
+            updateStats();
+            closeAddModal();
+            showToast(partId ? '配件已更新' : '配件已添加');
+        }
+
+        // ==================== Delete All ====================
+        function showDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function hideDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        function confirmDeleteAll() {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('carPartsLastUpdate');
+            updateDropdowns();
+            updateStats();
+            hideDeleteModal();
+            showToast('所有数据已清空');
+        }
+
+        // ==================== Toast Notification ====================
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg ${
+                type === 'error' ? 'bg-red-600' : 'bg-gray-800'
+            } text-white`;
+
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // ==================== Event Listeners ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize - 先尝试从外部数据加载
+            await loadExternalData();
+
+            updateStats();
+            updateDropdowns();
+
+            // Query button
+            document.getElementById('queryBtn').addEventListener('click', queryParts);
+
+            // Brand selection change
+            document.getElementById('brandSelect').addEventListener('change', function() {
+                const selectedBrand = this.value;
+                if (selectedBrand) {
+                    updateModelDropdown(selectedBrand);
+                } else {
+                    document.getElementById('modelSelect').innerHTML = '<option value="">请先选择品牌</option>';
+                }
+            });
+
+            // File import
+            document.getElementById('fileInput').addEventListener('change', handleFileImport);
+
+            // Export buttons
+            document.getElementById('exportJsonBtn').addEventListener('click', exportToJson);
+            document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
+
+            // Add part button
+            document.getElementById('addPartBtn').addEventListener('click', openAddModal);
+
+            // Modal buttons
+            document.getElementById('closeModalBtn').addEventListener('click', closeAddModal);
+            document.getElementById('cancelBtn').addEventListener('click', closeAddModal);
+            document.getElementById('partForm').addEventListener('submit', savePart);
+
+            // Delete modal
+            document.getElementById('clearAllBtn').addEventListener('click', showDeleteModal);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteAll);
+            document.getElementById('cancelDeleteBtn').addEventListener('click', hideDeleteModal);
+
+            // Close modals on outside click
+            document.getElementById('partModal').addEventListener('click', function(e) {
+                if (e.target === this) closeAddModal();
+            });
+            document.getElementById('deleteModal').addEventListener('click', function(e) {
+                if (e.target === this) hideDeleteModal();
+            });
+
+            // Enter key to query
+            document.getElementById('yearInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') queryParts();
+            });
+        });
+    </script>
+</body>
+</html>
